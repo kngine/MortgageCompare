@@ -45,14 +45,20 @@ export const Charts = ({
 
   const paymentScheduleRows = selectedScenario
     ? (() => {
+        let totalInterest = 0
+        let totalPrincipal = 0
         const base = [
-          { month: 0, paidInterest: 0, balance: loanAmount, paidPrincipal: 0 },
-          ...selectedScenario.result.schedule.map((point) => ({
-            month: point.month,
-            paidInterest: point.interest,
-            balance: point.balance,
-            paidPrincipal: point.principal,
-          })),
+          { month: 0, totalInterest: 0, balance: loanAmount, totalPrincipal: 0 },
+          ...selectedScenario.result.schedule.map((point) => {
+            totalInterest += point.interest
+            totalPrincipal += point.principal
+            return {
+              month: point.month,
+              totalInterest,
+              balance: point.balance,
+              totalPrincipal,
+            }
+          }),
         ]
         if (!isNotScenario1) return base
         const monthlyPay = selectedScenario.result.monthlyPayment
@@ -86,7 +92,7 @@ export const Charts = ({
               Payment Schedule
             </h3>
             <p className="text-sm text-slate-500">
-              Month-by-month: paid interest, balance, paid principal.
+              Total Interest and Total Principal are those paid up to date.
             </p>
           </div>
           <select
@@ -106,9 +112,9 @@ export const Charts = ({
             <thead className="sticky top-0 z-10 border-b border-slate-200 bg-white">
               <tr className="text-xs uppercase tracking-wide text-slate-500">
                 <th className="min-w-[72px] py-3 pr-3">Month</th>
-                <th className="min-w-[100px] py-3 pr-3">Paid interest</th>
+                <th className="min-w-[100px] py-3 pr-3">Total Interest</th>
+                <th className="min-w-[100px] py-3 pr-3">Total Principal</th>
                 <th className="min-w-[100px] py-3 pr-3">Balance</th>
-                <th className="min-w-[100px] py-3 pr-3">Paid principal</th>
                 {isNotScenario1 && (
                   <th className="min-w-[100px] py-3 pr-3">Saving</th>
                 )}
@@ -124,13 +130,13 @@ export const Charts = ({
                     {row.month}
                   </td>
                   <td className="min-w-[100px] py-2 pr-3 tabular-nums text-slate-600">
-                    {formatCurrencyPrecise(row.paidInterest)}
+                    {formatCurrencyPrecise(row.totalInterest)}
+                  </td>
+                  <td className="min-w-[100px] py-2 pr-3 tabular-nums text-slate-600">
+                    {formatCurrencyPrecise(row.totalPrincipal)}
                   </td>
                   <td className="min-w-[100px] py-2 pr-3 tabular-nums text-slate-600">
                     {formatCurrencyPrecise(row.balance)}
-                  </td>
-                  <td className="min-w-[100px] py-2 pr-3 tabular-nums text-slate-600">
-                    {formatCurrencyPrecise(row.paidPrincipal)}
                   </td>
                   {isNotScenario1 && "saving" in row && typeof (row as { saving?: number }).saving === "number" && (
                     <td className="min-w-[100px] py-2 pr-3 text-slate-600">
@@ -153,7 +159,7 @@ export const Charts = ({
         </div>
         {isNotScenario1 && (
           <p className="mt-3 text-xs text-slate-500">
-            Saving = how much less you owe vs Scenario 1 plus how much less you’ve paid so far vs Scenario 1. Positive = you’re ahead vs Scenario 1.
+            <strong>Saving</strong> = how much less you owe vs Scenario 1 plus how much less you’ve paid so far vs Scenario 1. Positive = you’re ahead vs Scenario 1. <strong>Break Even</strong> = the first month when your cumulative saving covers this scenario’s extra closing costs vs Scenario 1; after that month you’re ahead.
           </p>
         )}
       </div>

@@ -140,17 +140,19 @@ export const MortgageForm = ({
               : "Current balance is your loan amount (closing costs are separate)."}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2 rounded-full bg-slate-100 p-1">
-          <TogglePill
-            active={mode === "purchase"}
-            label="Purchase"
-            onClick={() => onModeChange("purchase")}
-          />
-          <TogglePill
-            active={mode === "refinance"}
-            label="Refinance"
-            onClick={() => onModeChange("refinance")}
-          />
+        <div className="w-fit shrink-0 self-start rounded-full bg-slate-100 p-1">
+          <div className="flex items-center gap-2">
+            <TogglePill
+              active={mode === "purchase"}
+              label="Purchase"
+              onClick={() => onModeChange("purchase")}
+            />
+            <TogglePill
+              active={mode === "refinance"}
+              label="Refinance"
+              onClick={() => onModeChange("refinance")}
+            />
+          </div>
         </div>
       </div>
 
