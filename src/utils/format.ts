@@ -20,3 +20,10 @@ export const formatPercent = (value: number) =>
 
 export const formatNumber = (value: number) =>
   new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value)
+
+/** Rate as displayed number, no rounding (e.g. 6.375 stays 6.375) */
+export const formatRate = (value: number) =>
+  new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 6,
+  }).format(value)

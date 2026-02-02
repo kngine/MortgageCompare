@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { DollarSign, Percent } from "lucide-react"
 
 export type MortgageMode = "purchase" | "refinance"
@@ -9,17 +10,11 @@ type MortgageFormProps = {
   downPaymentType: "percent" | "amount"
   downPaymentValue: number
   currentBalance: number
-  closingCosts: number
-  baseRate: number
-  termYears: number
   loanAmount: number
   onHomePriceChange: (value: number) => void
   onDownPaymentTypeChange: (value: "percent" | "amount") => void
   onDownPaymentValueChange: (value: number) => void
   onCurrentBalanceChange: (value: number) => void
-  onClosingCostsChange: (value: number) => void
-  onBaseRateChange: (value: number) => void
-  onTermYearsChange: (value: number) => void
 }
 
 const InputField = ({
@@ -36,23 +31,66 @@ const InputField = ({
   prefix?: string
   suffix?: string
   step?: string
-}) => (
-  <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-    {label}
-    <div className="flex items-center rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm focus-within:border-slate-400">
-      {prefix && <span className="text-slate-400">{prefix}</span>}
+}) => {
+  const [localStr, setLocalStr] = useState<string | undefined>(undefined)
+  const displayValue =
+    localStr !== undefined ? localStr : (Number.isFinite(value) ? String(value) : "")
+  return (
+    <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+      {label}
+      <div className="flex min-h-[48px] touch-manipulation items-center rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500">
+        {prefix && <span className="text-slate-400">{prefix}</span>}
+        <input
+          type="number"
+          value={displayValue}
+          onChange={(e) => setLocalStr(e.target.value)}
+          onFocus={() => setLocalStr(Number.isFinite(value) ? String(value) : "")}
+          onBlur={() => {
+            const raw = localStr ?? ""
+            const num = raw === "" || raw === "-" ? 0 : parseFloat(raw)
+            onChange(Number.isFinite(num) ? num : 0)
+            setLocalStr(undefined)
+          }}
+          className="min-h-[44px] w-full flex-1 bg-transparent text-base text-slate-900 outline-none"
+          step={step}
+        />
+        {suffix && <span className="text-slate-400">{suffix}</span>}
+      </div>
+    </label>
+  )
+}
+
+const DownPaymentInput = ({
+  value,
+  onChange,
+  step,
+}: {
+  value: number
+  onChange: (v: number) => void
+  step: string
+}) => {
+  const [localStr, setLocalStr] = useState<string | undefined>(undefined)
+  const displayValue =
+    localStr !== undefined ? localStr : (Number.isFinite(value) ? String(value) : "")
+  return (
+    <div className="flex min-h-[48px] items-center rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500">
       <input
         type="number"
-        value={Number.isFinite(value) ? value : 0}
-        onChange={(event) => onChange(Number(event.target.value))}
-        className="w-full bg-transparent text-base text-slate-900 outline-none"
+        value={displayValue}
+        onChange={(e) => setLocalStr(e.target.value)}
+        onFocus={() => setLocalStr(Number.isFinite(value) ? String(value) : "")}
+        onBlur={() => {
+          const raw = localStr ?? ""
+          const num = raw === "" || raw === "-" ? 0 : parseFloat(raw)
+          onChange(Number.isFinite(num) ? num : 0)
+          setLocalStr(undefined)
+        }}
+        className="min-h-[44px] w-full touch-manipulation bg-transparent text-base text-slate-900 outline-none"
         step={step}
-        min={0}
       />
-      {suffix && <span className="text-slate-400">{suffix}</span>}
     </div>
-  </label>
-)
+  )
+}
 
 const TogglePill = ({
   active,
@@ -66,10 +104,10 @@ const TogglePill = ({
   <button
     type="button"
     onClick={onClick}
-    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+    className={`min-h-[44px] min-w-[44px] touch-manipulation rounded-full px-5 py-2.5 text-sm font-semibold transition active:opacity-90 ${
       active
-        ? "bg-slate-900 text-white shadow"
-        : "bg-white text-slate-600 hover:bg-slate-100"
+        ? "bg-teal-600 text-white shadow"
+        : "bg-white text-slate-600 hover:bg-slate-100 active:bg-slate-100"
     }`}
   >
     {label}
@@ -83,28 +121,26 @@ export const MortgageForm = ({
   downPaymentType,
   downPaymentValue,
   currentBalance,
-  closingCosts,
-  baseRate,
-  termYears,
   loanAmount,
   onHomePriceChange,
   onDownPaymentTypeChange,
   onDownPaymentValueChange,
   onCurrentBalanceChange,
-  onClosingCostsChange,
-  onBaseRateChange,
-  onTermYearsChange,
 }: MortgageFormProps) => {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-900">Mortgage Inputs</h2>
+    <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold text-slate-900 sm:text-lg">
+            Mortgage Inputs
+          </h2>
           <p className="text-sm text-slate-500">
-            Switch between purchase and refinance to compare scenarios.
+            {mode === "purchase"
+              ? "Home price and down payment set your loan amount."
+              : "Current balance is your loan amount (closing costs are separate)."}
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-full bg-slate-100 p-1">
+        <div className="flex shrink-0 items-center gap-2 rounded-full bg-slate-100 p-1">
           <TogglePill
             active={mode === "purchase"}
             label="Purchase"
@@ -118,7 +154,7 @@ export const MortgageForm = ({
         </div>
       </div>
 
-      <div className="mt-6 grid gap-5 md:grid-cols-2">
+      <div className="mt-6 grid gap-5 sm:grid-cols-2">
         {mode === "purchase" ? (
           <>
             <InputField
@@ -130,14 +166,14 @@ export const MortgageForm = ({
             />
             <div className="flex flex-col gap-2 text-sm font-medium text-slate-700">
               Down Payment
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => onDownPaymentTypeChange("percent")}
-                  className={`flex-1 rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                  className={`min-h-[48px] touch-manipulation rounded-xl border px-3 py-3 text-sm font-semibold transition active:opacity-90 ${
                     downPaymentType === "percent"
-                      ? "border-slate-900 bg-slate-900 text-white"
-                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                      ? "border-teal-600 bg-teal-600 text-white"
+                      : "border-slate-200 bg-white text-slate-600 active:bg-slate-100 hover:bg-slate-100"
                   }`}
                 >
                   <Percent className="mr-2 inline h-4 w-4" />
@@ -146,65 +182,37 @@ export const MortgageForm = ({
                 <button
                   type="button"
                   onClick={() => onDownPaymentTypeChange("amount")}
-                  className={`flex-1 rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                  className={`min-h-[48px] touch-manipulation rounded-xl border px-3 py-3 text-sm font-semibold transition active:opacity-90 ${
                     downPaymentType === "amount"
-                      ? "border-slate-900 bg-slate-900 text-white"
-                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                      ? "border-teal-600 bg-teal-600 text-white"
+                      : "border-slate-200 bg-white text-slate-600 active:bg-slate-100 hover:bg-slate-100"
                   }`}
                 >
                   <DollarSign className="mr-2 inline h-4 w-4" />
                   Amount
                 </button>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
-                <input
-                  type="number"
-                  value={Number.isFinite(downPaymentValue) ? downPaymentValue : 0}
-                  onChange={(event) => onDownPaymentValueChange(Number(event.target.value))}
-                  className="w-full bg-transparent text-base text-slate-900 outline-none"
-                  step={downPaymentType === "percent" ? "0.1" : "1000"}
-                  min={0}
-                />
-              </div>
+              <DownPaymentInput
+                value={downPaymentValue}
+                onChange={onDownPaymentValueChange}
+                step={downPaymentType === "percent" ? "0.1" : "1000"}
+              />
             </div>
           </>
         ) : (
-          <>
-            <InputField
-              label="Current Balance"
-              value={currentBalance}
-              onChange={onCurrentBalanceChange}
-              prefix="$"
-              step="1000"
-            />
-            <InputField
-              label="Estimated Closing Costs"
-              value={closingCosts}
-              onChange={onClosingCostsChange}
-              prefix="$"
-              step="500"
-            />
-          </>
+          <InputField
+            label="Current Balance"
+            value={currentBalance}
+            onChange={onCurrentBalanceChange}
+            prefix="$"
+            step="1000"
+          />
         )}
-
-        <InputField
-          label={mode === "purchase" ? "Interest Rate" : "New Rate"}
-          value={baseRate}
-          onChange={onBaseRateChange}
-          suffix="%"
-          step="0.01"
-        />
-        <InputField
-          label="Loan Term (Years)"
-          value={termYears}
-          onChange={onTermYearsChange}
-          step="1"
-        />
       </div>
 
-      <div className="mt-6 rounded-xl bg-slate-50 px-4 py-3">
-        <p className="text-sm text-slate-500">Estimated Loan Amount</p>
-        <p className="text-2xl font-semibold text-slate-900">
+      <div className="mt-6 rounded-xl bg-teal-50 px-4 py-3">
+        <p className="text-sm text-teal-800/80">Loan Amount</p>
+        <p className="text-xl font-semibold tabular-nums text-teal-900 sm:text-2xl">
           ${Math.max(0, Math.round(loanAmount)).toLocaleString("en-US")}
         </p>
       </div>
